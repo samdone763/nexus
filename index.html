@@ -1,12 +1,389 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus AI</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Nexus</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#080c14; --surface:#0e1420; --surface2:#141c2e;
+  --border:rgba(255,255,255,0.07); --accent:#4f8eff;
+  --accent3:#34d399; --text:#f0f4ff; --text2:#8892aa; --text3:#3a4358;
+  --bubble-ai:#0e1420; --input-bg:#0e1420; --header-bg:rgba(8,12,20,0.9);
+  --shadow:0 8px 32px rgba(0,0,0,0.4); --radius:20px;
+}
+[data-theme="light"] {
+  --bg:#f0f2f7; --surface:#ffffff; --surface2:#f5f7fc;
+  --border:rgba(0,0,0,0.08); --accent:#2563eb; --accent3:#059669;
+  --text:#0f172a; --text2:#64748b; --text3:#cbd5e1;
+  --bubble-ai:#ffffff; --input-bg:#ffffff; --header-bg:rgba(240,242,247,0.95);
+  --shadow:0 4px 24px rgba(0,0,0,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;transition:background 0.3s,color 0.3s}
+.bg-fx{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.1;animation:drift 14s ease-in-out infinite alternate}
+.orb1{width:500px;height:500px;background:#4f8eff;top:-150px;left:-150px}
+.orb2{width:350px;height:350px;background:#a78bfa;bottom:50px;right:-100px;animation-delay:-6s}
+.orb3{width:250px;height:250px;background:#34d399;top:45%;left:35%;animation-delay:-10s}
+[data-theme="light"] .orb{opacity:0.05}
+@keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(25px,18px) scale(1.07)}}
+.app{position:relative;z-index:1;height:100vh;display:flex;flex-direction:column}
+
+/* HEADER */
+.header{display:flex;align-items:center;padding:12px 16px;background:var(--header-bg);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--border);gap:10px;flex-shrink:0}
+.logo{width:34px;height:34px;flex-shrink:0}
+.logo svg{width:100%;height:100%}
+.header-info{flex:1}
+.header-info h1{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;background:linear-gradient(90deg,var(--text),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-0.3px}
+.header-info p{font-size:11px;color:var(--text2);margin-top:1px}
+.hbtns{display:flex;gap:6px}
+.hbtn{width:32px;height:32px;border-radius:50%;border:none;background:var(--surface2);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+.hbtn:active{transform:scale(0.88)}
+.status{width:7px;height:7px;border-radius:50%;background:var(--accent3);box-shadow:0 0 8px var(--accent3);animation:blink 2.5s ease infinite;flex-shrink:0}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* MESSAGES */
+.messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:4px;scroll-behavior:smooth}
+.messages::-webkit-scrollbar{width:3px}
+.messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+
+/* WELCOME */
+.welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;gap:14px}
+.w-icon{width:68px;height:68px;background:var(--surface);border:1px solid var(--border);border-radius:22px;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow)}
+.welcome h2{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;background:linear-gradient(135deg,var(--text) 0%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.welcome p{color:var(--text2);font-size:13.5px;line-height:1.6;max-width:270px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:4px;max-width:340px}
+.chip{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:8px 14px;font-size:12.5px;color:var(--text2);cursor:pointer;transition:all 0.18s}
+.chip:active{transform:scale(0.96);background:var(--surface2)}
+
+/* MSG ROW */
+.msg-row{display:flex;gap:8px;animation:msgIn 0.26s cubic-bezier(0.34,1.4,0.64,1) both}
+@keyframes msgIn{from{opacity:0;transform:translateY(10px) scale(0.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.msg-row.user{flex-direction:row-reverse}
+.av{width:28px;height:28px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-top:2px;font-size:10px;font-weight:700}
+.av.ai{background:var(--surface2);border:1px solid var(--border)}
+.av.me{background:linear-gradient(135deg,#1e3a7a,#162d60);color:var(--accent)}
+[data-theme="light"] .av.me{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff}
+.msg-body{max-width:78%;display:flex;flex-direction:column;gap:3px}
+.msg-row.user .msg-body{align-items:flex-end}
+.bubble{padding:10px 14px;line-height:1.6;font-size:14.5px;word-break:break-word}
+.bubble.ai{background:var(--bubble-ai);border:1px solid var(--border);border-radius:4px var(--radius) var(--radius) var(--radius);color:var(--text)}
+.bubble.user{background:linear-gradient(135deg,#1e3a7a,#162d60);border-radius:var(--radius) 4px var(--radius) var(--radius);color:#ddeeff}
+[data-theme="light"] .bubble.user{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff}
+.msg-time{font-size:10px;color:var(--text3);padding:0 4px}
+.bubble img{max-width:100%;border-radius:12px;margin-top:8px;display:block}
+.bubble .pdf-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(79,142,255,0.15);border:1px solid rgba(79,142,255,0.25);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--accent);margin-top:6px}
+
+/* TYPING */
+.typing-row{display:flex;gap:8px}
+.typing-bubble{background:var(--surface);border:1px solid var(--border);border-radius:4px var(--radius) var(--radius) var(--radius);padding:13px 16px;display:flex;gap:4px;align-items:center}
+.typing-bubble span{width:6px;height:6px;border-radius:50%;background:var(--accent);display:block;animation:t 1.2s ease infinite}
+.typing-bubble span:nth-child(2){animation-delay:0.2s}
+.typing-bubble span:nth-child(3){animation-delay:0.4s}
+@keyframes t{0%,60%,100%{transform:translateY(0);opacity:0.35}30%{transform:translateY(-5px);opacity:1}}
+.bubble pre{background:#060a12;border-radius:8px;padding:12px;margin:8px 0;overflow-x:auto;font-size:12.5px;border:1px solid rgba(255,255,255,0.06);font-family:'Courier New',monospace;color:#7dd3fc}
+[data-theme="light"] .bubble pre{background:#1e293b}
+.bubble code{font-family:'Courier New',monospace;color:#7dd3fc;font-size:12.5px}
+
+/* ATTACH PREVIEW */
+.attach-bar{padding:8px 16px;background:var(--surface);border-top:1px solid var(--border);display:none;gap:10px;align-items:center;flex-shrink:0}
+.attach-bar.show{display:flex}
+.attach-thumb{width:48px;height:48px;border-radius:10px;object-fit:cover;border:1px solid var(--border)}
+.attach-info{flex:1}
+.attach-info p{font-size:13px;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.attach-info span{font-size:11px;color:var(--text2)}
+.rm-btn{width:26px;height:26px;border-radius:50%;border:none;background:var(--surface2);color:var(--text2);cursor:pointer;font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center}
+
+/* INPUT */
+.input-wrap{padding:10px 14px 18px;background:var(--header-bg);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-top:1px solid var(--border);flex-shrink:0}
+.input-bar{display:flex;align-items:flex-end;gap:8px;background:var(--input-bg);border:1px solid var(--border);border-radius:26px;padding:7px 7px 7px 14px;transition:border-color 0.2s}
+.input-bar:focus-within{border-color:rgba(79,142,255,0.4)}
+.input-bar textarea{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.5;resize:none;max-height:110px;min-height:24px;padding:4px 0;align-self:flex-end}
+.input-bar textarea::placeholder{color:var(--text3)}
+.ibtns{display:flex;gap:5px;align-items:flex-end;flex-shrink:0}
+.ibtn{width:34px;height:34px;border-radius:50%;border:none;background:var(--surface2);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.18s;flex-shrink:0}
+.ibtn:active{transform:scale(0.88)}
+.ibtn.rec{background:rgba(239,68,68,0.2);color:#ef4444;animation:rp 1s ease infinite}
+@keyframes rp{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.3)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
+.send-btn{width:38px;height:38px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,var(--accent),#2a6aee);color:#fff;display:flex;align-items:center;justify-content:center;transition:all 0.2s;box-shadow:0 2px 12px rgba(79,142,255,0.3)}
+.send-btn:active{transform:scale(0.88)}
+.send-btn:disabled{opacity:0.35;cursor:default}
+.hint{text-align:center;font-size:11px;color:var(--text3);margin-top:7px}
+input[type=file]{display:none}
+
+/* VOICE MODAL */
+.vmodal{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center}
+.vmodal.show{display:flex}
+.vcard{background:var(--surface);border:1px solid var(--border);border-radius:28px;padding:36px 32px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;min-width:260px;box-shadow:var(--shadow)}
+.vring{width:88px;height:88px;border-radius:50%;background:rgba(79,142,255,0.1);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;animation:vr 1.2s ease infinite}
+@keyframes vr{0%,100%{box-shadow:0 0 0 0 rgba(79,142,255,0.3)}50%{box-shadow:0 0 0 16px rgba(79,142,255,0)}}
+.vcard h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:700}
+.vcard p{font-size:13px;color:var(--text2);min-height:20px}
+.vstop{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:20px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+</style>
 </head>
 <body>
-    <h1>Nexus AI</h1>
+<div class="bg-fx">
+  <div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
+</div>
+
+<div class="app">
+  <div class="header">
+    <div class="logo">
+      <svg viewBox="0 0 36 36" fill="none">
+        <circle cx="18" cy="18" r="17" stroke="rgba(79,142,255,0.25)" stroke-width="1"/>
+        <path d="M10 26L18 10l8 16" stroke="#4f8eff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M13 21h10" stroke="#4f8eff" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+        <circle cx="18" cy="18" r="2" fill="#4f8eff" opacity="0.9"/>
+      </svg>
+    </div>
+    <div class="header-info">
+      <h1>Nexus</h1>
+      <p>General Intelligence</p>
+    </div>
+    <div class="hbtns">
+      <button class="hbtn" id="theme-btn" onclick="toggleTheme()" title="Toggle theme">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+      <button class="hbtn" onclick="clearChat()" title="Clear chat">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      </button>
+    </div>
+    <div class="status"></div>
+  </div>
+
+  <div class="messages" id="messages">
+    <div class="welcome" id="welcome">
+      <div class="w-icon">
+        <svg width="34" height="34" viewBox="0 0 36 36" fill="none">
+          <path d="M10 26L18 10l8 16" stroke="#4f8eff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M13 21h10" stroke="#4f8eff" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+          <circle cx="18" cy="18" r="2.5" fill="#4f8eff"/>
+        </svg>
+      </div>
+      <h2>Hello, I'm Nexus</h2>
+      <p>Ask anything in English or Kiswahili — upload images, PDFs, or use your voice.</p>
+      <div class="chips">
+        <div class="chip" onclick="useChip(this)">💡 Explain AI simply</div>
+        <div class="chip" onclick="useChip(this)">🌍 Historia ya Tanzania</div>
+        <div class="chip" onclick="useChip(this)">💻 Write Python code</div>
+        <div class="chip" onclick="useChip(this)">🚀 Best startup ideas 2025</div>
+        <div class="chip" onclick="useChip(this)">📊 How to grow a business</div>
+        <div class="chip" onclick="useChip(this)">🏥 Dalili za malaria ni zipi?</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="attach-bar" id="attach-bar">
+    <img id="ath-img" class="attach-thumb" style="display:none"/>
+    <div id="ath-pdf" style="display:none;width:48px;height:48px;background:rgba(79,142,255,0.1);border-radius:10px;border:1px solid rgba(79,142,255,0.2);align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📄</div>
+    <div class="attach-info">
+      <p id="ath-name">file</p>
+      <span id="ath-sub">Ready to send</span>
+    </div>
+    <button class="rm-btn" onclick="removeAttach()">×</button>
+  </div>
+
+  <div class="input-wrap">
+    <div class="input-bar">
+      <textarea id="user-input" placeholder="Message Nexus..." rows="1"
+        onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      <div class="ibtns">
+        <button class="ibtn" onclick="document.getElementById('img-input').click()" title="Image">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </button>
+        <button class="ibtn" onclick="document.getElementById('pdf-input').click()" title="PDF">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </button>
+        <button class="ibtn" id="mic-btn" onclick="startVoice()" title="Voice">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </button>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="hint">Nexus may make mistakes · Verify important info</div>
+  </div>
+
+  <input type="file" id="img-input" accept="image/*" onchange="handleImg(event)">
+  <input type="file" id="pdf-input" accept=".pdf" onchange="handlePdf(event)">
+</div>
+
+<div class="vmodal" id="vmodal">
+  <div class="vcard">
+    <div class="vring">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#4f8eff" stroke-width="2" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+    </div>
+    <h3>Listening...</h3>
+    <p id="vtxt">Speak now</p>
+    <button class="vstop" onclick="stopVoice()">Stop</button>
+  </div>
+</div>
+
+<script>
+const API_KEY = "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
+";
+const MODEL   = "mistralai/mistral-7b-instruct:free";
+const SYSTEM  = "You are Nexus, an advanced AI assistant. Be helpful, concise and intelligent. Respond in the same language as the user — English or Swahili. Format code in code blocks when needed.";
+
+let history=[], thinking=false, attachData=null, attachType=null, attachName='', recognition=null;
+const msgEl=document.getElementById('messages'), inputEl=document.getElementById('user-input'), sendEl=document.getElementById('send-btn');
+
+function toggleTheme(){
+  const h=document.documentElement, dark=h.getAttribute('data-theme')==='dark';
+  h.setAttribute('data-theme',dark?'light':'dark');
+  document.getElementById('theme-btn').innerHTML=dark
+    ?'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
+    :'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+}
+
+function getTime(){return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,110)+'px'}
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
+function scroll(){msgEl.scrollTop=msgEl.scrollHeight}
+function hideWelcome(){const w=document.getElementById('welcome');if(w)w.style.display='none'}
+
+function fmt(t){
+  t=t.replace(/```(\w+)?\n?([\s\S]*?)```/g,'<pre><code>$2</code></pre>');
+  t=t.replace(/`([^`]+)`/g,'<code>$1</code>');
+  t=t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  t=t.replace(/\n/g,'<br>');
+  return t;
+}
+
+const AI_ICON=`<svg width="14" height="14" viewBox="0 0 36 36" fill="none"><path d="M10 26L18 10l8 16" stroke="#4f8eff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 21h10" stroke="#4f8eff" stroke-width="1.5" stroke-linecap="round"/><circle cx="18" cy="18" r="2" fill="#4f8eff"/></svg>`;
+
+function addMsg(html,role){
+  hideWelcome();
+  const row=document.createElement('div');row.className=`msg-row ${role}`;
+  row.innerHTML=`<div class="av ${role==='user'?'me':'ai'}">${role==='user'?'You':AI_ICON}</div><div class="msg-body"><div class="bubble ${role}">${html}</div><span class="msg-time">${getTime()}</span></div>`;
+  msgEl.appendChild(row);scroll();return row;
+}
+
+function addTyping(){
+  hideWelcome();
+  const row=document.createElement('div');row.className='typing-row';row.id='typing';
+  row.innerHTML=`<div class="av ai">${AI_ICON}</div><div class="typing-bubble"><span></span><span></span><span></span></div>`;
+  msgEl.appendChild(row);scroll();
+}
+function removeTyping(){const el=document.getElementById('typing');if(el)el.remove();}
+
+function handleImg(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    attachData=ev.target.result.split(',')[1];attachType='image';attachName=file.name;
+    const img=document.getElementById('ath-img');
+    img.src=ev.target.result;img.style.display='block';
+    document.getElementById('ath-pdf').style.display='none';
+    document.getElementById('ath-name').textContent=file.name;
+    document.getElementById('ath-sub').textContent='Image · Send to analyze';
+    document.getElementById('attach-bar').classList.add('show');
+  };reader.readAsDataURL(file);e.target.value='';
+}
+
+function handlePdf(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    attachData=ev.target.result.split(',')[1];attachType='pdf';attachName=file.name;
+    document.getElementById('ath-img').style.display='none';
+    document.getElementById('ath-pdf').style.display='flex';
+    document.getElementById('ath-name').textContent=file.name;
+    document.getElementById('ath-sub').textContent='PDF · Send to analyze';
+    document.getElementById('attach-bar').classList.add('show');
+  };reader.readAsDataURL(file);e.target.value='';
+}
+
+function removeAttach(){
+  attachData=null;attachType=null;attachName='';
+  document.getElementById('attach-bar').classList.remove('show');
+}
+
+function startVoice(){
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){alert('Voice not supported. Try Chrome.');return;}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recognition=new SR();recognition.continuous=false;recognition.interimResults=true;recognition.lang='en-US';
+  document.getElementById('vmodal').classList.add('show');
+  document.getElementById('vtxt').textContent='Speak now...';
+  recognition.onresult=e=>{
+    const t=Array.from(e.results).map(r=>r[0].transcript).join('');
+    document.getElementById('vtxt').textContent=t;
+  };
+  recognition.onend=()=>{
+    const t=document.getElementById('vtxt').textContent;
+    document.getElementById('vmodal').classList.remove('show');
+    if(t&&t!=='Speak now...'){inputEl.value=t;autoResize(inputEl);}
+  };
+  recognition.start();
+}
+function stopVoice(){if(recognition)recognition.stop();}
+
+async function sendMessage(){
+  const text=inputEl.value.trim();
+  if((!text&&!attachData)||thinking)return;
+  thinking=true;sendEl.disabled=true;
+
+  let userHTML=text?fmt(text):'';
+  let userContent=text||'';
+
+  if(attachType==='image'&&attachData){
+    userHTML+=`<img src="data:image/jpeg;base64,${attachData}" style="max-width:100%;border-radius:12px;margin-top:${text?'8':'0'}px"/>`;
+    userContent=userContent||'Describe this image in detail.';
+  }
+  if(attachType==='pdf'&&attachData){
+    userHTML+=`<div class="pdf-badge">📄 ${attachName}</div>`;
+    userContent=userContent||'Summarize this PDF document.';
+  }
+
+  addMsg(userHTML,'user');
+  inputEl.value='';inputEl.style.height='auto';
+
+  let userMsg;
+  if(attachType==='image'&&attachData){
+    userMsg={role:'user',content:[{type:'image_url',image_url:{url:`data:image/jpeg;base64,${attachData}`}},{type:'text',text:userContent}]};
+  } else {
+    userMsg={role:'user',content:userContent+(attachType==='pdf'&&attachData?`\n[PDF attached: ${attachName}]`:'')};
+  }
+
+  history.push(userMsg);
+  removeAttach();
+  addTyping();
+
+  try{
+    const useModel=attachType==='image'?'openai/gpt-4o-mini':MODEL;
+    const res=await fetch('https://openrouter.ai/api/v1/chat/completions',{
+      method:'POST',
+      headers:{'Authorization':`Bearer ${API_KEY}`,'Content-Type':'application/json','HTTP-Referer':window.location.href,'X-Title':'Nexus AI'},
+      body:JSON.stringify({model:useModel,messages:[{role:'system',content:SYSTEM},...history],max_tokens:1024,temperature:0.7})
+    });
+    const data=await res.json();
+    const reply=data?.choices?.[0]?.message?.content||'No response. Please try again.';
+    removeTyping();addMsg(fmt(reply),'ai');
+    history.push({role:'assistant',content:reply});
+  }catch(err){
+    removeTyping();addMsg('⚠️ Connection error. Check your API key and internet connection.','ai');
+  }
+
+  attachType=null;attachData=null;thinking=false;sendEl.disabled=false;inputEl.focus();
+}
+
+function useChip(el){
+  inputEl.value=el.innerText.replace(/^[\S]+\s/,'');
+  sendMessage();
+}
+
+function clearChat(){
+  history=[];msgEl.innerHTML='';
+  const w=document.createElement('div');w.className='welcome';w.id='welcome';
+  w.innerHTML=`<div class="w-icon">${AI_ICON.replace('14','34').replace('14','34')}<svg width="34" height="34" viewBox="0 0 36 36" fill="none"><path d="M10 26L18 10l8 16" stroke="#4f8eff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 21h10" stroke="#4f8eff" stroke-width="2" stroke-linecap="round" opacity="0.7"/><circle cx="18" cy="18" r="2.5" fill="#4f8eff"/></svg></div><h2>Hello, I'm Nexus</h2><p>Ask anything in English or Kiswahili — upload images, PDFs, or use your voice.</p><div class="chips"><div class="chip" onclick="useChip(this)">💡 Explain AI simply</div><div class="chip" onclick="useChip(this)">🌍 Historia ya Tanzania</div><div class="chip" onclick="useChip(this)">💻 Write Python code</div><div class="chip" onclick="useChip(this)">🚀 Best startup ideas 2025</div><div class="chip" onclick="useChip(this)">📊 How to grow a business</div><div class="chip" onclick="useChip(this)">🏥 Dalili za malaria ni zipi?</div></div>`;
+  msgEl.appendChild(w);
+}
+</script>
 </body>
 </html>
+
 
